@@ -14,6 +14,23 @@ Threadatlas turns recorded dependencies into a change checklist: which jobs to u
 
 The planner uses built-in fictional data. The demo covers application outages and KPI lineage through the **Blast Radius** and **KPI DNA** screens. Run the app locally to try it.
 
+## Blast Radius gallery
+
+**Outage report** · See affected systems and processes alongside the recovery plans.
+
+![Order Management outage report with affected processes and recovery plans](docs/blast-radius-report.png)
+
+**Dependency map** · Explore the same outage and inspect the relationships behind it.
+
+![Threadatlas dependency map with the Order Management system selected](docs/blast-radius-map.png)
+
+<details>
+<summary>Watch the dependency particles move</summary>
+
+![Animated particles traveling along the recorded dependencies in the Order Management outage simulation](docs/dependency-particles.gif)
+
+</details>
+
 ## Run locally
 
 Install Python 3.11, Node.js 24 and pnpm 11.25.0. With standard Node installations, install pnpm using `npm install -g pnpm@11.25.0`.
