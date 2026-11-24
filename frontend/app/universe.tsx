@@ -197,7 +197,11 @@ export default function Universe({
           controls.target.set(0, 0, 0);
         } else {
           const distance = camera.position.distanceTo(controls.target);
-          const next = THREE.MathUtils.clamp(distance + (type === "in" ? -3 : 3), 2, 65);
+          const next = THREE.MathUtils.clamp(
+            distance + (type === "in" ? -3 : 3),
+            2,
+            65,
+          );
           forward.subVectors(camera.position, controls.target).normalize();
           camera.position.copy(controls.target).addScaledVector(forward, next);
         }
@@ -215,13 +219,15 @@ export default function Universe({
         const level = data.levels?.[id];
         const visible =
           !current.motion || level === undefined || elapsed >= level * 0.38;
-        const arrival = current.motion && level === undefined && !oldNodes.has(id)
-          ? THREE.MathUtils.smoothstep(elapsed, 0, 0.6)
-          : 1;
+        const arrival =
+          current.motion && level === undefined && !oldNodes.has(id)
+            ? THREE.MathUtils.smoothstep(elapsed, 0, 0.6)
+            : 1;
         dot.scale.setScalar(
           dot.userData.size *
             (id === current.selected ? 1.8 : 1) *
-            (visible ? 1 : 0.32) * (0.28 + arrival * 0.72),
+            (visible ? 1 : 0.32) *
+            (0.28 + arrival * 0.72),
         );
       }
       const picked = current.selected && positions.get(current.selected);
@@ -238,7 +244,8 @@ export default function Universe({
           const reverse =
             source !== undefined && target !== undefined && source > target;
           const delay = Math.max(0, Math.min(source ?? 0, target ?? 0)) * 0.38;
-          const progress = delay ? Math.max(0, (elapsed - delay) * 2.6) % 1
+          const progress = delay
+            ? Math.max(0, (elapsed - delay) * 2.6) % 1
             : (elapsed * 0.36 + index * 0.173) % 1;
           point.lerpVectors(from, to, reverse ? 1 - progress : progress);
           point.toArray(particlePositions, index * 3);

@@ -11,6 +11,8 @@ from pydantic import BaseModel, Field
 
 from .graph import COUNTS, YEARS, dependencies, entity, organization, relations, risks, targets, trace
 
+from .llm import summarize
+
 app = FastAPI(title="EnterpriseBrain", version="0.1.0", description="Synthetic Nexora Global graph intelligence")
 
 
@@ -164,6 +166,12 @@ class Question(BaseModel):
 
 @app.post("/ask")
 def ask(question: Question):
+    result = grounded_answer(question)
+    summary = summarize(result["answer"], result)
+    return {**result, "summary": summary} if summary else result
+
+
+def grounded_answer(question: Question):
     graph = snapshot(question.year)
     prompt = question.text.casefold()
     candidates = [entity(graph, node) for node in graph if entity(graph, node).kind != "employee"

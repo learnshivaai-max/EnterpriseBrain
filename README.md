@@ -35,6 +35,10 @@ Use the Local URL printed by Next.js if port 3000 is already occupied. Open [Ent
 - The deterministic query interpreter recognizes named entities and supports impact, ownership and upstream lineage. Responses use the selected graph snapshot and require no external service.
 - The graph browser pages results and excludes individual employees in the default view. Search or select the employee type to inspect individual employees.
 
+## Optional local model
+
+Run Ollama on the same machine as the Python API. Set `ENTERPRISEBRAIN_OLLAMA_MODEL` to an already installed local model before starting Uvicorn. The API sends a short synthetic evidence sample to the Ollama loopback address and presents the response as a model summary. The graph-derived answer and evidence remain available if the model is disabled, fails, or times out. [Ollama generate API](https://docs.ollama.com/api/generate)
+
 ## Run checks
 
 ```powershell

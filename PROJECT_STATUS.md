@@ -18,13 +18,13 @@
 - Next.js and React render the interface, with Three.js directly managing WebGL. The styling is custom CSS and the app uses local system fonts. The graph is the main visualization.
 - NetworkX holds the seeded graph in memory. SQLite persists scenario records. Historical snapshots are generated from the built-in model.
 - The default graph excludes individual employees and shows a bounded page. Departments form visual clusters. The department view aggregates cross-department dependencies and supports drill-down. The inspector provides a keyboard-operable way to browse the same entities when WebGL is unavailable.
-- Natural-language parsing uses exact entity names and a limited set of intents. Optional Ollama and Neo4j integrations are pending.
+- Natural-language parsing uses exact entity names and a limited set of intents. Optional Ollama summaries use the local loopback endpoint and fall back to the deterministic answer. A live model was unavailable here. Neo4j integration is pending.
 - The current application has a local trust model and uses synthetic data. Docker and GitHub Actions require verification on their respective environments.
 - There is no configured GitHub remote in this checkout. Deployment requires separate authorization.
 
 ## Verification
 
-- Eight Pytest tests passed, covering reproducible snapshots, pagination, graph algorithms, analysis endpoints, department aggregation and SQLite persistence.
+- Nine Pytest tests passed, covering reproducible snapshots, pagination, graph algorithms, analysis endpoints, department aggregation and SQLite persistence and the mocked Ollama contract and fallback.
 - Three Playwright tests passed in Chrome, covering 3D WebGL rendering, search and relationship inspection, all ten modules, mobile layout, department aggregation and full-screen controls.
 - ESLint and the Next.js production build passed. The browser run used an NTFS QA copy with the same lockfile and a loopback API running from the project checkout.
 - The npm advisory audit and pip-audit reported no known vulnerabilities for the checked dependency sets. Installed direct dependency metadata reported MIT, BSD-3-Clause, ISC and Apache-2.0 licenses.

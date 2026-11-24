@@ -84,3 +84,23 @@ def test_department_aggregation_preserves_cross_department_dependencies():
         entity(graph, left).department != entity(graph, right).department
         for left, right in dependencies(graph).edges
     )
+
+
+def test_local_model_summary_preserves_verified_evidence_and_falls_back(monkeypatch):
+    from unittest.mock import Mock
+
+    from backend import llm
+
+    question = {"text": "What happens if Order Management fails?"}
+    baseline = client.post("/ask", json=question).json()
+    service = Mock()
+    service.getresponse.return_value.status = 200
+    service.getresponse.return_value.read.return_value = b'{"response":"Synthetic summary."}'
+    connect = Mock(return_value=service)
+    monkeypatch.setattr(llm, "HTTPConnection", connect)
+    monkeypatch.setenv("ENTERPRISEBRAIN_OLLAMA_MODEL", "example-local-model")
+    assert client.post("/ask", json=question).json() == {**baseline, "summary": "Synthetic summary."}
+    connect.assert_called_once_with("127.0.0.1", 11434, timeout=8)
+    assert service.request.call_args.args[:2] == ("POST", "/api/generate")
+    service.getresponse.side_effect = TimeoutError()
+    assert client.post("/ask", json=question).json() == baseline

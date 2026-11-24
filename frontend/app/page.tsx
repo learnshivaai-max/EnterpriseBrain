@@ -157,7 +157,11 @@ type Agent = {
   evidence: Inspection;
 };
 type Knowledge = { entity: Entity; alternatives: Entity[]; mitigation: string };
-type Answer = Evidence & { answer: string; assumption: string };
+type Answer = Evidence & {
+  summary?: string;
+  answer: string;
+  assumption: string;
+};
 const pretty = (text: string) => text.replaceAll("_", " ");
 
 export default function Page() {
@@ -756,6 +760,12 @@ export default function Page() {
                     {answer && (
                       <>
                         <strong>{answer.answer}</strong>
+                      {answer.summary && (
+                        <div>
+                          <small>Local model summary</small>
+                          <p>{answer.summary}</p>
+                        </div>
+                      )}
                         <p>{answer.assumption}</p>
                         {answer.edges.slice(0, 15).map((edge) => (
                           <p key={edge.source + edge.target}>
