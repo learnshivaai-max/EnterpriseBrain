@@ -133,11 +133,13 @@ def agent(node: str, year: int = 2026):
     if entity(graph, node).kind != "agent":
         raise HTTPException(422, "Choose an AI agent")
     reads = targets(graph, node, "can_read")
+    evidence = inspect(node, year)
+    evidence["nodes"] = [evidence["entity"], *evidence["nodes"]]
     return {"entity": entity(graph, node), "overlaps": [entity(graph, other) for other in agent_overlaps(graph)[node]],
             "excess": [entity(graph, dataset) for dataset in reads
                        if entity(graph, dataset).department != entity(graph, node).department],
             "assumption": "The synthetic baseline permits same-department reads. Cross-department grants require review.",
-            "evidence": inspect(node, year)}
+            "evidence": evidence}
 
 
 @app.get("/snapshots")
