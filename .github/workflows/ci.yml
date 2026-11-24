@@ -1,0 +1,49 @@
+name: EnterpriseBrain checks
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+      - run: npm install -g pnpm@11.25.0
+      - run: pip install -r backend/requirements-dev.txt
+      - run: python -m pytest -q
+      - run: pnpm --dir frontend install --frozen-lockfile
+      - run: pnpm --dir frontend lint
+      - run: pnpm --dir frontend build
+      - run: pnpm --dir frontend exec playwright install --with-deps chromium
+      - run: |
+          python -m uvicorn backend.main:app --host 127.0.0.1 --port 8000 &
+          for i in {1..30}; do
+            if curl --fail --silent http://127.0.0.1:8000/health; then break; fi
+            sleep 1
+          done
+          curl --fail http://127.0.0.1:8000/health
+          pnpm --dir frontend test:e2e
+  dependency-audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+      - run: pip install pip-audit
+      - run: pip-audit -r backend/requirements.txt
+      - run: npm install -g pnpm@11.25.0
+      - run: pnpm --dir frontend audit --audit-level high
+      - name: Check tracked files for credential-shaped values
+        run: |
+          if git grep -I -l -E 'BEGIN (RSA |OPENSSH |EC )?PRIVATE KEY|gh[pousr]_[A-Za-z0-9]{30,}|AKIA[A-Z0-9]{16}' -- . ':!.github/workflows/ci.yml'; then
+            exit 1
+          fi
