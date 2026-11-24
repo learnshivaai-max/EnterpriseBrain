@@ -14,6 +14,6 @@ The local Docker demo is the reproducible no-cost option. For a future hosted tr
 
 ## Launch copy
 
-EnterpriseBrain is an open-source graph intelligence application for tracing the systems, people, and data that support enterprise decisions. Explore a synthetic organization in 3D, simulate a dependency failure, and follow executive metrics back to their source systems. The demo runs locally and provides graph-grounded answers without a hosted AI service.
+Threadatlas is an open-source graph intelligence application for tracing the systems, people, and data that support enterprise decisions. Explore a synthetic organization in 3D, simulate a dependency failure, and follow executive metrics back to their source systems. The demo runs locally and provides graph-grounded answers without a hosted AI service.
 
 A future Render trial could run the frontend and API as two free web services. Configure the frontend API origin at build time, expose the API only for the synthetic demo, disable scenario writes at the gateway, and allow for cold starts. Render documents 750 free instance hours per workspace per month, idle spin-down and ephemeral storage. SQLite scenario persistence therefore stays in the local Compose demo. Check billing settings and terms before provisioning. [Render free-tier documentation](https://render.com/docs/free)

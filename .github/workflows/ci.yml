@@ -1,4 +1,4 @@
-name: EnterpriseBrain checks
+name: Threadatlas checks
 on: [push, pull_request]
 permissions:
   contents: read

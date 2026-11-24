@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "./styles.css";
 
 export const metadata: Metadata = {
-  title: "EnterpriseBrain | Nexora Global",
-  description: "See the invisible connections that power your enterprise.",
+  title: "Threadatlas | Nexora Global",
+  description: "See how your enterprise fits together.",
 };
 
 export default function Layout({

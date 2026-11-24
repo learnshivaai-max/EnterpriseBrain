@@ -44,7 +44,7 @@ const modules = [
   {
     name: "Enterprise Universe",
     icon: Globe2,
-    text: "Explore Nexora Global’s organizational graph.",
+    text: "See how a fictional company’s teams, software, and data depend on each other.",
   },
   {
     name: "Blast Radius",
@@ -417,15 +417,15 @@ export default function Page() {
       <aside className="sidebar">
         <button
           className="brand"
-          aria-label="EnterpriseBrain home"
+          aria-label="Threadatlas home"
           onClick={() => open(0)}
         >
           <span className="brand-icon">
             <Aperture size={22} />
           </span>
           <span>
-            Enterprise<span className="brand-accent">Brain</span>
-            <small>Enterprise Intelligence OS</small>
+            Thread<span className="brand-accent">atlas</span>
+            <small>Enterprise dependency map</small>
           </span>
         </button>
         <div className="workspace">
@@ -434,7 +434,7 @@ export default function Page() {
           </span>
           <div>
             <strong>Nexora Global</strong>
-            <small>Synthetic workspace</small>
+            <small>Fictional company demo</small>
           </div>
         </div>
         <div className="nav-label">Intelligence modules</div>

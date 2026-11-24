@@ -1,8 +1,8 @@
-# EnterpriseBrain
+# Threadatlas
 
-See the invisible connections that power your enterprise.
+See how your enterprise fits together.
 
-EnterpriseBrain is an Enterprise Intelligence OS for exploring the fictional multinational Nexora Global. The seeded current snapshot contains 10,000 employees, 30 departments, 50 applications, 200 business processes, 100 policies and 25 AI agents, alongside executive metrics, data assets, roles and recovery plans.
+Threadatlas maps how teams, software, and data depend on each other. The local demo uses a fictional multinational, Nexora Global. Open Blast Radius to see which processes would be affected if a system failed, or KPI DNA to see where a metric comes from. The seeded current snapshot contains 10,000 employees, 30 departments, 50 applications, 200 business processes, 100 policies and 25 AI agents, alongside executive metrics, data assets, roles and recovery plans.
 
 ## Run locally
 
@@ -23,7 +23,7 @@ pnpm --dir frontend install --frozen-lockfile
 pnpm --dir frontend dev --hostname 127.0.0.1
 ```
 
-Use the Local URL printed by Next.js if port 3000 is already occupied. The frontend uses a hoisted pnpm layout for Windows drives that cannot create symlinks. First install can take several minutes on an external drive. Open [EnterpriseBrain](http://127.0.0.1:3000) and [interactive API documentation](http://127.0.0.1:8000/docs). On macOS or Linux, the virtual-environment interpreter is `.venv/bin/python`. With Docker Compose, run `docker compose up --build` and open the same frontend URL. The SQLite scenario database is saved in a Docker volume or under `data/` in local development.
+Use the Local URL printed by Next.js if port 3000 is already occupied. The frontend uses a hoisted pnpm layout for Windows drives that cannot create symlinks. First install can take several minutes on an external drive. Open [Threadatlas](http://127.0.0.1:3000) and [interactive API documentation](http://127.0.0.1:8000/docs). On macOS or Linux, the virtual-environment interpreter is `.venv/bin/python`. With Docker Compose, run `docker compose up --build` and open the same frontend URL. The SQLite scenario database is saved in a Docker volume or under `data/` in local development.
 
 ## How the graph works
 

@@ -13,7 +13,7 @@ from .graph import COUNTS, YEARS, dependencies, entity, organization, relations,
 
 from .llm import summarize
 
-app = FastAPI(title="EnterpriseBrain", version="0.1.0", description="Synthetic Nexora Global graph intelligence")
+app = FastAPI(title="Threadatlas", version="0.1.0", description="Synthetic Nexora Global graph intelligence")
 
 
 def snapshot(year):
