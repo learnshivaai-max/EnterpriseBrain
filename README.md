@@ -23,7 +23,7 @@ pnpm --dir frontend install --frozen-lockfile
 pnpm --dir frontend dev --hostname 127.0.0.1
 ```
 
-Use the Local URL printed by Next.js if port 3000 is already occupied. Open [EnterpriseBrain](http://127.0.0.1:3000) and [interactive API documentation](http://127.0.0.1:8000/docs). On macOS or Linux, the virtual-environment interpreter is `.venv/bin/python`. With Docker Compose, run `docker compose up --build` and open the same frontend URL. The SQLite scenario database is saved in a Docker volume or under `data/` in local development.
+Use the Local URL printed by Next.js if port 3000 is already occupied. The frontend uses a hoisted pnpm layout for Windows drives that cannot create symlinks. First install can take several minutes on an external drive. Open [EnterpriseBrain](http://127.0.0.1:3000) and [interactive API documentation](http://127.0.0.1:8000/docs). On macOS or Linux, the virtual-environment interpreter is `.venv/bin/python`. With Docker Compose, run `docker compose up --build` and open the same frontend URL. The SQLite scenario database is saved in a Docker volume or under `data/` in local development.
 
 ## How the graph works
 

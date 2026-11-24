@@ -26,6 +26,6 @@
 
 - Nine Pytest tests passed, covering reproducible snapshots, pagination, graph algorithms, analysis endpoints, department aggregation and SQLite persistence and the mocked Ollama contract and fallback.
 - Three Playwright tests passed in Chrome, covering 3D WebGL rendering, search and relationship inspection, all ten modules, mobile layout, department aggregation and full-screen controls.
-- ESLint and the Next.js production build passed. The browser run used an NTFS QA copy with the same lockfile and a loopback API running from the project checkout.
-- The npm advisory audit and pip-audit reported no known vulnerabilities for the checked dependency sets. Installed direct dependency metadata reported MIT, BSD-3-Clause, ISC and Apache-2.0 licenses.
+- ESLint and the Next.js production build passed. The standalone production server returned the application page and proxied the graph request to FastAPI. The browser run used an NTFS QA copy with the same lockfile and a loopback API running from the project checkout.
+- The npm advisory audit and pip-audit reported no known vulnerabilities for the checked dependency sets. A targeted check found no credential-shaped strings in the tracked source. Installed direct dependency metadata reported MIT, BSD-3-Clause, ISC and Apache-2.0 licenses.
 - Docker and GitHub Actions were configured. A Docker engine and an authorized GitHub remote were unavailable for execution here.
