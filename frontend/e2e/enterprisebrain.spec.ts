@@ -101,6 +101,10 @@ test("opens with named outage evidence and lets users switch scenarios", async (
   page,
 }) => {
   await page.goto("/");
+  await page
+    .getByRole("navigation")
+    .getByRole("button", { name: "Blast Radius" })
+    .click();
   await expect(
     page.getByRole("heading", { name: "What breaks if this goes down?" }),
   ).toBeVisible();
@@ -128,4 +132,50 @@ test("opens with named outage evidence and lets users switch scenarios", async (
   await expect(page.getByRole("table")).not.toContainText(
     "Order Management → Order Fulfillment",
   );
+});
+
+test("plans a table change from sample column lineage", async ({ page }) => {
+  await page.goto("/");
+  await expect(
+    page.getByRole("heading", { name: "Before you change a table" }),
+  ).toBeVisible();
+  await expect(
+    page.getByText("demo.supply.inventory_daily", { exact: true }),
+  ).toBeVisible();
+  await expect(page.getByRole("status")).toHaveText(
+    "3 jobs to update · 3 reports to test · 5 teams to notify",
+  );
+  if (process.env.THREADATLAS_PLANNER_SCREENSHOT) {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.screenshot({ path: process.env.THREADATLAS_PLANNER_SCREENSHOT });
+  }
+  const change = page.getByRole("combobox", { name: "Proposed change" });
+  await change.selectOption("drop-threshold");
+  await expect(page.getByRole("status")).toHaveText(
+    "1 job to update · 1 report to test · 2 teams to notify",
+  );
+  await expect(
+    page.getByRole("region", { name: "Jobs to update" }),
+  ).toContainText("Build reorder candidates");
+  await expect(
+    page.getByRole("region", { name: "Reports to test" }),
+  ).toContainText("Reorder Watchlist");
+  await expect(
+    page.getByRole("region", { name: "Owners to notify" }),
+  ).toContainText("Inventory Operations");
+  await expect(
+    page.getByText("Finance Analytics", { exact: true }),
+  ).toHaveCount(0);
+  await change.selectOption("change-cost-type");
+  await expect(
+    page.getByRole("region", { name: "Reports to test" }),
+  ).toContainText("Inventory Value");
+  await change.selectOption("add-note");
+  await expect(page.getByRole("status")).toHaveText(
+    "No downstream impact found in the sample lineage.",
+  );
+  await page.setViewportSize({ width: 390, height: 844 });
+  expect(
+    await page.evaluate(() => document.documentElement.scrollWidth),
+  ).toBeLessThanOrEqual(390);
 });

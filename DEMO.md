@@ -2,8 +2,8 @@
 
 ## Demo
 
-1. Open Threadatlas to the Order Management outage simulation. Review the named downstream dependencies and expand a recovery plan.
-2. Choose Show dependency map to inspect the same scenario visually, or open Enterprise Universe to search the full organization.
+1. Open Threadatlas and choose a change to the fictional Databricks inventory table. Compare the jobs, reports, and owners affected by a rename and a column drop.
+2. Open Blast Radius for an application outage simulation. Review the named dependencies, expand a recovery plan, or choose Show dependency map.
 3. Open KPI DNA and follow Operating Margin through the pipeline and source system. Switch direction to compare downstream lineage.
 4. Compare the 2024 and 2026 snapshots. Open AI Agent Universe and inspect cross-department access flagged by the synthetic baseline.
 5. Start Executive Mode to step through the three graph evidence scenes.

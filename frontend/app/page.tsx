@@ -25,10 +25,12 @@ import {
   Plus,
   Radar,
   Search,
+  Table2,
   ShieldAlert,
   Users,
   X,
 } from "lucide-react";
+import ChangePlanner from "./change-planner";
 import Universe from "./universe";
 import {
   api,
@@ -40,6 +42,7 @@ import {
   type Graph,
 } from "./model";
 
+const changePlanner = 10;
 const modules = [
   {
     name: "Enterprise Universe",
@@ -91,6 +94,11 @@ const modules = [
     icon: Play,
     text: "Walk through three connected findings from the synthetic organization.",
   },
+  { name: "Table change planner", icon: Table2, text: "" },
+];
+const moduleOrder = [
+  changePlanner,
+  ...Array.from({ length: changePlanner }, (_, index) => index),
 ];
 const defaults: Record<number, string> = {
   1: "application-1",
@@ -165,7 +173,7 @@ type Answer = Evidence & {
 const pretty = (text: string) => text.replaceAll("_", " ");
 
 export default function Page() {
-  const [module, setModule] = useState(1);
+  const [module, setModule] = useState(changePlanner);
   const [showImpactMap, setShowImpactMap] = useState(false);
   const [year, setYear] = useState(2026);
   const [before, setBefore] = useState(2024);
@@ -176,8 +184,8 @@ export default function Page() {
   const [graph, setGraph] = useState<Graph>();
   const [graphError, setGraphError] = useState("");
   const [graphLoading, setGraphLoading] = useState(true);
-  const [selected, setSelected] = useState(defaults[1]);
-  const [target, setTarget] = useState(defaults[1]);
+  const [selected, setSelected] = useState("");
+  const [target, setTarget] = useState("");
   const [inspection, setInspection] = useState<Inspection>();
   const [inspectionError, setInspectionError] = useState("");
   const [trace, setTrace] = useState<Trace>();
@@ -208,6 +216,7 @@ export default function Page() {
   }, []);
 
   useEffect(() => {
+    if (module === changePlanner) return;
     const controller = new AbortController();
     const id = setTimeout(() => {
       setGraphLoading(true);
@@ -421,7 +430,7 @@ export default function Page() {
         <button
           className="brand"
           aria-label="Threadatlas home"
-          onClick={() => open(1)}
+          onClick={() => open(changePlanner)}
         >
           <span className="brand-icon">
             <Aperture size={22} />
@@ -442,19 +451,22 @@ export default function Page() {
         </div>
         <div className="nav-label">Intelligence modules</div>
         <nav aria-label="Intelligence modules">
-          {modules.map(({ name, icon: Icon }, index) => (
-            <button
-              key={name}
-              aria-label={name}
-              className={module === index ? "active" : ""}
-              aria-current={module === index ? "page" : undefined}
-              onClick={() => open(index)}
-            >
-              <Icon size={17} />
-              <span>{name}</span>
-              {module === index && <span className="nav-dot" />}
-            </button>
-          ))}
+          {moduleOrder.map((index) => {
+            const { name, icon: Icon } = modules[index];
+            return (
+              <button
+                key={name}
+                aria-label={name}
+                className={module === index ? "active" : ""}
+                aria-current={module === index ? "page" : undefined}
+                onClick={() => open(index)}
+              >
+                <Icon size={17} />
+                <span>{name}</span>
+                {module === index && <span className="nav-dot" />}
+              </button>
+            );
+          })}
         </nav>
         <div className="sidebar-bottom">
           <span className="status-dot" /> Local intelligence
@@ -467,28 +479,31 @@ export default function Page() {
             <Layers3 size={16} /> Workspace <ChevronRight size={13} />{" "}
             <strong>{moduleInfo.name}</strong>
           </div>
-          <label className="snapshot">
-            <Clock3 size={15} />
-            <span>Snapshot</span>
-            <select
-              aria-label="Active snapshot"
-              value={year}
-              onChange={(event) => {
-                setYear(Number(event.target.value));
-                setOffset(0);
-                setComparison(undefined);
-                setInspection(undefined);
-                setInspectionError("");
-                setAnswer(undefined);
-              }}
-            >
-              <option>2026</option>
-              <option>2025</option>
-              <option>2024</option>
-            </select>
-          </label>
+          {module !== changePlanner && (
+            <label className="snapshot">
+              <Clock3 size={15} />
+              <span>Snapshot</span>
+              <select
+                aria-label="Active snapshot"
+                value={year}
+                onChange={(event) => {
+                  setYear(Number(event.target.value));
+                  setOffset(0);
+                  setComparison(undefined);
+                  setInspection(undefined);
+                  setInspectionError("");
+                  setAnswer(undefined);
+                }}
+              >
+                <option>2026</option>
+                <option>2025</option>
+                <option>2024</option>
+              </select>
+            </label>
+          )}
         </header>
-        <section className="page-body">
+        {module === changePlanner && <ChangePlanner />}
+        <section className="page-body" hidden={module === changePlanner}>
           <div className="intro">
             <div>
               <h1>
@@ -547,7 +562,7 @@ export default function Page() {
             />
           )}
 
-          {(module !== 1 || showImpactMap) && (
+          {module !== changePlanner && (module !== 1 || showImpactMap) && (
             <div className="dashboard">
               <section
                 className={
