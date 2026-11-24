@@ -165,7 +165,8 @@ type Answer = Evidence & {
 const pretty = (text: string) => text.replaceAll("_", " ");
 
 export default function Page() {
-  const [module, setModule] = useState(0);
+  const [module, setModule] = useState(1);
+  const [showImpactMap, setShowImpactMap] = useState(false);
   const [year, setYear] = useState(2026);
   const [before, setBefore] = useState(2024);
   const [query, setQuery] = useState("");
@@ -175,8 +176,8 @@ export default function Page() {
   const [graph, setGraph] = useState<Graph>();
   const [graphError, setGraphError] = useState("");
   const [graphLoading, setGraphLoading] = useState(true);
-  const [selected, setSelected] = useState("");
-  const [target, setTarget] = useState("");
+  const [selected, setSelected] = useState(defaults[1]);
+  const [target, setTarget] = useState(defaults[1]);
   const [inspection, setInspection] = useState<Inspection>();
   const [inspectionError, setInspectionError] = useState("");
   const [trace, setTrace] = useState<Trace>();
@@ -328,6 +329,8 @@ export default function Page() {
   }, [clustered, year]);
 
   function open(index: number) {
+    if (index === module) return;
+    setShowImpactMap(false);
     setClustered(false);
     setModule(index);
     setTarget(defaults[index] ?? "");
@@ -418,7 +421,7 @@ export default function Page() {
         <button
           className="brand"
           aria-label="Threadatlas home"
-          onClick={() => open(0)}
+          onClick={() => open(1)}
         >
           <span className="brand-icon">
             <Aperture size={22} />
@@ -488,589 +491,782 @@ export default function Page() {
         <section className="page-body">
           <div className="intro">
             <div>
-              <div className="eyebrow">
-                <Network size={15} /> Organization intelligence
-              </div>
-              <h1>{moduleInfo.name}</h1>
-              <p>{moduleInfo.text}</p>
+              <h1>
+                {module === 1
+                  ? "What breaks if this goes down?"
+                  : moduleInfo.name}
+              </h1>
+              <p>
+                {module === 1
+                  ? "Choose a system to see which parts of the company depend on it."
+                  : moduleInfo.text}
+              </p>
             </div>
-            <button className="secondary executive" onClick={() => open(9)}>
-              <Play size={15} /> Executive mode
-            </button>
           </div>
-          <div className="metrics">
-            {[
-              ["employee", "Employees"],
-              ["department", "Departments"],
-              ["application", "Applications"],
-              ["process", "Processes"],
-              ["agent", "AI agents"],
-            ].map(([key, name]) => (
-              <div className="metric" key={key}>
-                <span
-                  className="metric-dot"
-                  style={{ background: colors[key] ?? "#9084d8" }}
-                />
-                <div>
-                  <strong>
-                    {graph?.counts[key]?.toLocaleString("en-US") ?? "—"}
-                  </strong>
-                  <small>{name}</small>
+          {module === 0 && (
+            <div className="metrics">
+              {[
+                ["employee", "Employees"],
+                ["department", "Departments"],
+                ["application", "Applications"],
+                ["process", "Processes"],
+                ["agent", "AI agents"],
+              ].map(([key, name]) => (
+                <div className="metric" key={key}>
+                  <span
+                    className="metric-dot"
+                    style={{ background: colors[key] ?? "#9084d8" }}
+                  />
+                  <div>
+                    <strong>
+                      {graph?.counts[key]?.toLocaleString("en-US") ?? "—"}
+                    </strong>
+                    <small>{name}</small>
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
 
-          <div className="dashboard">
-            <section
-              className={fullscreen ? "graph-panel fullscreen" : "graph-panel"}
-              aria-label="Knowledge graph"
-              onKeyDown={(event) => {
-                if (event.key === "Escape") setFullscreen(false);
+          {module === 1 && (
+            <ImpactReport
+              trace={trace}
+              target={target}
+              graph={graph}
+              busy={busy}
+              error={error}
+              showMap={showImpactMap}
+              toggleMap={() => setShowImpactMap(!showImpactMap)}
+              chooseTarget={(id) => {
+                if (id === target) return;
+                setTrace(undefined);
+                setInspection(undefined);
+                setSelected(id);
+                setTarget(id);
               }}
-            >
-              <div className="graph-tools">
-                {module === 0 && (
-                  <button
-                    className="secondary"
-                    aria-pressed={clustered}
-                    onClick={() => setClustered(!clustered)}
-                  >
-                    <Network size={15} /> Departments
-                  </button>
-                )}
-                <label className="search">
-                  <Search size={16} />
-                  <input
-                    aria-label="Search entities"
-                    placeholder="Search entities…"
-                    value={query}
+            />
+          )}
+
+          {(module !== 1 || showImpactMap) && (
+            <div className="dashboard">
+              <section
+                className={
+                  fullscreen ? "graph-panel fullscreen" : "graph-panel"
+                }
+                aria-label="Knowledge graph"
+                onKeyDown={(event) => {
+                  if (event.key === "Escape") setFullscreen(false);
+                }}
+              >
+                <div className="graph-tools">
+                  {module === 0 && (
+                    <button
+                      className="secondary"
+                      aria-pressed={clustered}
+                      onClick={() => setClustered(!clustered)}
+                    >
+                      <Network size={15} /> Departments
+                    </button>
+                  )}
+                  <label className="search">
+                    <Search size={16} />
+                    <input
+                      aria-label="Search entities"
+                      placeholder="Search entities…"
+                      value={query}
+                      onChange={(event) => {
+                        setClustered(false);
+                        setQuery(event.target.value);
+                        setOffset(0);
+                      }}
+                    />
+                  </label>
+                  <select
+                    aria-label="Filter by department"
+                    value={department}
                     onChange={(event) => {
                       setClustered(false);
-                      setQuery(event.target.value);
+                      setDepartment(event.target.value);
                       setOffset(0);
                     }}
-                  />
-                </label>
-                <select
-                  aria-label="Filter by department"
-                  value={department}
-                  onChange={(event) => {
-                    setClustered(false);
-                    setDepartment(event.target.value);
-                    setOffset(0);
-                  }}
-                >
-                  <option value="">All departments</option>
-                  {graph?.departments.map((item) => (
-                    <option key={item.id} value={item.id}>
-                      {item.label}
-                    </option>
-                  ))}
-                </select>
-                <select
-                  aria-label="Filter by entity type"
-                  value={kind}
-                  onChange={(event) => {
-                    setClustered(false);
-                    setKind(event.target.value);
-                    setOffset(0);
-                  }}
-                >
-                  <option value="">All types</option>
-                  {Object.keys(graph?.counts ?? {}).map((item) => (
-                    <option key={item}>{item}</option>
-                  ))}
-                </select>
-              </div>
-              <div className="viewport">
-                <Universe
-                  data={visual}
-                  selected={focused}
-                  pick={pick}
-                  cameraAction={camera}
-                  motion={motion}
-                />
-                <div className="canvas-label">
-                  <span className="status-dot" />
-                  {clustered
-                    ? "Department dependencies"
-                    : visual === graph
-                      ? "Graph explorer"
-                      : "Analysis evidence"}
-                </div>
-                <div className="camera">
-                  {[
-                    [Plus, "in", "Zoom in"],
-                    [Minus, "out", "Zoom out"],
-                    [Focus, "reset", "Reset camera"],
-                  ].map(([Icon, type, label]) => {
-                    const CameraIcon = Icon as typeof Plus;
-                    return (
-                      <button
-                        key={String(type)}
-                        aria-label={String(label)}
-                        title={String(label)}
-                        onClick={() =>
-                          setCamera({
-                            type: String(type),
-                            tick: camera.tick + 1,
-                          })
-                        }
-                      >
-                        <CameraIcon size={17} />
-                      </button>
-                    );
-                  })}
-                  <button
-                    aria-label="Toggle animation"
-                    aria-pressed={motion}
-                    title="Toggle animation"
-                    onClick={() => setMotion(!motion)}
                   >
-                    <AudioLines size={17} />
-                  </button>
-                  <button
-                    aria-label={fullscreen ? "Exit full screen" : "Full screen"}
-                    title="Full screen"
-                    onClick={() => setFullscreen(!fullscreen)}
-                  >
-                    <Maximize size={17} />
-                  </button>
-                </div>
-                {graphLoading && !graph && (
-                  <div className="graph-notice" role="status">
-                    Loading organization…
-                  </div>
-                )}
-                {graphError && (
-                  <div className="graph-notice" role="alert">
-                    {graphError}
-                  </div>
-                )}
-                {!graphLoading && graph && !showing && (
-                  <div className="graph-notice">
-                    No entities match these filters.
-                  </div>
-                )}
-                <div className="legend">
-                  {palette.map((item) => (
-                    <span key={item}>
-                      <i style={{ background: colors[item] }} />
-                      {item}
-                    </span>
-                  ))}
-                </div>
-              </div>
-              <footer className="graph-footer">
-                <span>
-                  <Crosshair size={14} /> {showing} visible ·{" "}
-                  {visual.edges.length} relationships
-                </span>
-                <span>Drag to rotate · Scroll to zoom</span>
-              </footer>
-            </section>
-
-            <aside
-              className="inspector"
-              aria-label="Entity and analysis inspector"
-            >
-              <div className="inspector-title">
-                <span>
-                  <Layers3 size={17} />{" "}
-                  {module === 0 ? "Entity explorer" : moduleInfo.name}
-                </span>
-                {selected && (
-                  <button
-                    title="Clear selection"
-                    aria-label="Clear selection"
-                    onClick={() => {
-                      setSelected("");
-                      setInspection(undefined);
-                      setInspectionError("");
+                    <option value="">All departments</option>
+                    {graph?.departments.map((item) => (
+                      <option key={item.id} value={item.id}>
+                        {item.label}
+                      </option>
+                    ))}
+                  </select>
+                  <select
+                    aria-label="Filter by entity type"
+                    value={kind}
+                    onChange={(event) => {
+                      setClustered(false);
+                      setKind(event.target.value);
+                      setOffset(0);
                     }}
                   >
-                    <X size={16} />
-                  </button>
-                )}
-              </div>
-              <div className="inspector-body">
-                {module === 2 && (
-                  <div className="analysis">
-                    <label>
-                      Compare from{" "}
-                      <select
-                        aria-label="Compare from snapshot"
-                        value={before}
-                        onChange={(event) =>
-                          setBefore(Number(event.target.value))
-                        }
+                    <option value="">All types</option>
+                    {Object.keys(graph?.counts ?? {}).map((item) => (
+                      <option key={item}>{item}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="viewport">
+                  <Universe
+                    data={visual}
+                    selected={focused}
+                    pick={pick}
+                    cameraAction={camera}
+                    motion={motion}
+                  />
+                  <div className="canvas-label">
+                    <span className="status-dot" />
+                    {clustered
+                      ? "Department dependencies"
+                      : visual === graph
+                        ? "Graph explorer"
+                        : "Analysis evidence"}
+                  </div>
+                  <div className="camera">
+                    {[
+                      [Plus, "in", "Zoom in"],
+                      [Minus, "out", "Zoom out"],
+                      [Focus, "reset", "Reset camera"],
+                    ].map(([Icon, type, label]) => {
+                      const CameraIcon = Icon as typeof Plus;
+                      return (
+                        <button
+                          key={String(type)}
+                          aria-label={String(label)}
+                          title={String(label)}
+                          onClick={() =>
+                            setCamera({
+                              type: String(type),
+                              tick: camera.tick + 1,
+                            })
+                          }
+                        >
+                          <CameraIcon size={17} />
+                        </button>
+                      );
+                    })}
+                    <button
+                      aria-label="Toggle animation"
+                      aria-pressed={motion}
+                      title="Toggle animation"
+                      onClick={() => setMotion(!motion)}
+                    >
+                      <AudioLines size={17} />
+                    </button>
+                    <button
+                      aria-label={
+                        fullscreen ? "Exit full screen" : "Full screen"
+                      }
+                      title="Full screen"
+                      onClick={() => setFullscreen(!fullscreen)}
+                    >
+                      <Maximize size={17} />
+                    </button>
+                  </div>
+                  {graphLoading && !graph && (
+                    <div className="graph-notice" role="status">
+                      Loading organization…
+                    </div>
+                  )}
+                  {graphError && (
+                    <div className="graph-notice" role="alert">
+                      {graphError}
+                    </div>
+                  )}
+                  {!graphLoading && graph && !showing && (
+                    <div className="graph-notice">
+                      No entities match these filters.
+                    </div>
+                  )}
+                  <div className="legend">
+                    {palette.map((item) => (
+                      <span key={item}>
+                        <i style={{ background: colors[item] }} />
+                        {item}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+                <footer className="graph-footer">
+                  <span>
+                    <Crosshair size={14} /> {showing} visible ·{" "}
+                    {visual.edges.length} relationships
+                  </span>
+                  <span>Drag to rotate · Scroll to zoom</span>
+                </footer>
+              </section>
+
+              <aside
+                className="inspector"
+                aria-label="Entity and analysis inspector"
+              >
+                <div className="inspector-title">
+                  <span>
+                    <Layers3 size={17} />{" "}
+                    {module === 0 ? "Entity explorer" : moduleInfo.name}
+                  </span>
+                  {selected && (
+                    <button
+                      title="Clear selection"
+                      aria-label="Clear selection"
+                      onClick={() => {
+                        setSelected("");
+                        setInspection(undefined);
+                        setInspectionError("");
+                      }}
+                    >
+                      <X size={16} />
+                    </button>
+                  )}
+                </div>
+                <div className="inspector-body">
+                  {module === 2 && (
+                    <div className="analysis">
+                      <label>
+                        Compare from{" "}
+                        <select
+                          aria-label="Compare from snapshot"
+                          value={before}
+                          onChange={(event) =>
+                            setBefore(Number(event.target.value))
+                          }
+                        >
+                          <option>2024</option>
+                          <option>2025</option>
+                          <option>2026</option>
+                        </select>
+                      </label>
+                      {comparison && (
+                        <>
+                          <strong>
+                            {comparison.added.length} added ·{" "}
+                            {comparison.removed.length} removed
+                          </strong>
+                          <p>
+                            {comparison.relationship_count} relationship changes
+                            · {comparison.risk_before} → {comparison.risk_after}{" "}
+                            risk findings
+                          </p>
+                          {comparison.added
+                            .concat(comparison.removed)
+                            .slice(0, 12)
+                            .map((item) => (
+                              <p key={item.id}>{item.label}</p>
+                            ))}
+                          <details>
+                            <summary>Ownership and dependency changes</summary>
+                            {comparison.changes.slice(0, 35).map((item) => (
+                              <p key={JSON.stringify(item)}>
+                                {item.change} · {item.source}{" "}
+                                {pretty(item.kind)} {item.target}
+                              </p>
+                            ))}
+                          </details>
+                        </>
+                      )}
+                    </div>
+                  )}
+                  {module === 3 && (
+                    <form className="analysis" onSubmit={ask}>
+                      <label htmlFor="question">Question</label>
+                      <textarea
+                        id="question"
+                        maxLength={400}
+                        value={question}
+                        onChange={(event) => setQuestion(event.target.value)}
+                        placeholder="What happens if Order Management fails?"
+                      />
+                      <button
+                        className="primary"
+                        disabled={busy || !question.trim()}
                       >
-                        <option>2024</option>
-                        <option>2025</option>
-                        <option>2026</option>
-                      </select>
-                    </label>
-                    {comparison && (
-                      <>
-                        <strong>
-                          {comparison.added.length} added ·{" "}
-                          {comparison.removed.length} removed
-                        </strong>
-                        <p>
-                          {comparison.relationship_count} relationship changes ·{" "}
-                          {comparison.risk_before} → {comparison.risk_after}{" "}
-                          risk findings
-                        </p>
-                        {comparison.added
-                          .concat(comparison.removed)
-                          .slice(0, 12)
-                          .map((item) => (
-                            <p key={item.id}>{item.label}</p>
+                        Ask question
+                      </button>
+                      {answer && (
+                        <>
+                          <strong>{answer.answer}</strong>
+                          {answer.summary && (
+                            <div>
+                              <small>Local model summary</small>
+                              <p>{answer.summary}</p>
+                            </div>
+                          )}
+                          <p>{answer.assumption}</p>
+                          {answer.edges.slice(0, 15).map((edge) => (
+                            <p key={edge.source + edge.target}>
+                              {
+                                answer.nodes.find(
+                                  (item) => item.id === edge.source,
+                                )?.label
+                              }{" "}
+                              · {pretty(edge.kind)} ·{" "}
+                              {
+                                answer.nodes.find(
+                                  (item) => item.id === edge.target,
+                                )?.label
+                              }
+                            </p>
                           ))}
+                        </>
+                      )}
+                    </form>
+                  )}
+                  {module === 5 && (
+                    <div className="direction">
+                      <button
+                        className={direction === "upstream" ? "chosen" : ""}
+                        onClick={() => setDirection("upstream")}
+                      >
+                        <ArrowUp size={14} /> Upstream
+                      </button>
+                      <button
+                        className={direction === "downstream" ? "chosen" : ""}
+                        onClick={() => setDirection("downstream")}
+                      >
+                        <ArrowDown size={14} /> Downstream
+                      </button>
+                    </div>
+                  )}
+                  {module === 9 && (
+                    <div className="analysis">
+                      <small>
+                        Scene {scene + 1} of {demo.length}
+                      </small>
+                      <strong>{demo[scene].heading}</strong>
+                      <p>{demo[scene].detail}</p>
+                      <div className="direction">
+                        <button
+                          disabled={!scene}
+                          onClick={() => setScene(scene - 1)}
+                        >
+                          <ChevronLeft size={16} /> Previous
+                        </button>
+                        <button
+                          disabled={scene === demo.length - 1}
+                          onClick={() => setScene(scene + 1)}
+                        >
+                          Next <ChevronRight size={16} />
+                        </button>
+                      </div>
+                      <button
+                        className="primary"
+                        onClick={() => {
+                          if (!playing && scene === demo.length - 1)
+                            setScene(0);
+                          setPlaying(!playing);
+                        }}
+                      >
+                        {playing ? "Pause presentation" : "Play presentation"}
+                      </button>
+                    </div>
+                  )}
+                  {trace && [5, 9].includes(module) && (
+                    <div className="analysis">
+                      <strong>
+                        {Object.values(trace.counts).reduce(
+                          (sum, value) => sum + value,
+                          0,
+                        )}{" "}
+                        connected entities
+                      </strong>
+                      <p>{trace.departments.length} departments</p>
+                      <div className="tags">
+                        {Object.entries(trace.counts).map(([name, count]) => (
+                          <span key={name}>
+                            {count} {name}
+                          </span>
+                        ))}
+                      </div>
+                      {module !== 5 && (
                         <details>
-                          <summary>Ownership and dependency changes</summary>
-                          {comparison.changes.slice(0, 35).map((item) => (
-                            <p key={JSON.stringify(item)}>
-                              {item.change} · {item.source} {pretty(item.kind)}{" "}
-                              {item.target}
+                          <summary>
+                            {trace.plans.length} documented contingency plans
+                          </summary>
+                          {trace.plans.map((item) => (
+                            <p key={item.id}>
+                              {item.label} · {item.details.procedure}
                             </p>
                           ))}
                         </details>
-                      </>
-                    )}
-                  </div>
-                )}
-                {module === 3 && (
-                  <form className="analysis" onSubmit={ask}>
-                    <label htmlFor="question">Question</label>
-                    <textarea
-                      id="question"
-                      maxLength={400}
-                      value={question}
-                      onChange={(event) => setQuestion(event.target.value)}
-                      placeholder="What happens if Order Management fails?"
-                    />
-                    <button
-                      className="primary"
-                      disabled={busy || !question.trim()}
-                    >
-                      Ask question
-                    </button>
-                    {answer && (
-                      <>
-                        <strong>{answer.answer}</strong>
-                      {answer.summary && (
-                        <div>
-                          <small>Local model summary</small>
-                          <p>{answer.summary}</p>
-                        </div>
                       )}
-                        <p>{answer.assumption}</p>
-                        {answer.edges.slice(0, 15).map((edge) => (
-                          <p key={edge.source + edge.target}>
-                            {
-                              answer.nodes.find(
-                                (item) => item.id === edge.source,
-                              )?.label
-                            }{" "}
-                            · {pretty(edge.kind)} ·{" "}
-                            {
-                              answer.nodes.find(
-                                (item) => item.id === edge.target,
-                              )?.label
-                            }
-                          </p>
-                        ))}
-                      </>
-                    )}
-                  </form>
-                )}
-                {module === 5 && (
-                  <div className="direction">
-                    <button
-                      className={direction === "upstream" ? "chosen" : ""}
-                      onClick={() => setDirection("upstream")}
-                    >
-                      <ArrowUp size={14} /> Upstream
-                    </button>
-                    <button
-                      className={direction === "downstream" ? "chosen" : ""}
-                      onClick={() => setDirection("downstream")}
-                    >
-                      <ArrowDown size={14} /> Downstream
-                    </button>
-                  </div>
-                )}
-                {module === 9 && (
-                  <div className="analysis">
-                    <small>
-                      Scene {scene + 1} of {demo.length}
-                    </small>
-                    <strong>{demo[scene].heading}</strong>
-                    <p>{demo[scene].detail}</p>
-                    <div className="direction">
-                      <button
-                        disabled={!scene}
-                        onClick={() => setScene(scene - 1)}
-                      >
-                        <ChevronLeft size={16} /> Previous
-                      </button>
-                      <button
-                        disabled={scene === demo.length - 1}
-                        onClick={() => setScene(scene + 1)}
-                      >
-                        Next <ChevronRight size={16} />
-                      </button>
                     </div>
-                    <button
-                      className="primary"
-                      onClick={() => {
-                        if (!playing && scene === demo.length - 1) setScene(0);
-                        setPlaying(!playing);
-                      }}
-                    >
-                      {playing ? "Pause presentation" : "Play presentation"}
-                    </button>
-                  </div>
-                )}
-                {trace && [1, 5, 9].includes(module) && (
-                  <div className="analysis">
-                    <strong>
-                      {Object.values(trace.counts).reduce(
-                        (sum, value) => sum + value,
-                        0,
-                      )}{" "}
-                      {module === 1
-                        ? "affected entities"
-                        : "connected entities"}
-                    </strong>
-                    <p>{trace.departments.length} departments</p>
-                    <div className="tags">
-                      {Object.entries(trace.counts).map(([name, count]) => (
-                        <span key={name}>
-                          {count} {name}
-                        </span>
+                  )}
+                  {agent && module === 6 && (
+                    <div className="analysis">
+                      <strong>
+                        {agent.overlaps.length} overlapping agents
+                      </strong>
+                      <p>
+                        {agent.overlaps.map((item) => item.label).join(", ") ||
+                          "No recorded overlaps."}
+                      </p>
+                      <strong>
+                        {agent.excess.length} access paths to review
+                      </strong>
+                      <p>
+                        {agent.excess.map((item) => item.label).join(", ") ||
+                          "No grants outside the baseline."}
+                      </p>
+                      <small>{agent.assumption}</small>
+                    </div>
+                  )}
+                  {knowledge && module === 7 && (
+                    <div className="analysis">
+                      <strong>
+                        {
+                          knowledge.filter((item) => !item.alternatives.length)
+                            .length
+                        }{" "}
+                        assets lose all owners
+                      </strong>
+                      {knowledge.length ? (
+                        knowledge.map((row) => (
+                          <div key={row.entity.id}>
+                            <b>{row.entity.label}</b>
+                            <p>
+                              {row.alternatives
+                                .map((item) => item.label)
+                                .join(", ") || row.mitigation}
+                            </p>
+                          </div>
+                        ))
+                      ) : (
+                        <p>No documented assets are assigned to this role.</p>
+                      )}
+                    </div>
+                  )}
+                  {findings && [4, 8].includes(module) && (
+                    <div className="analysis">
+                      <strong>{findings.length} findings</strong>
+                      {findings.slice(0, 40).map((row) => (
+                        <button
+                          className="finding"
+                          key={row.entity.id + row.title}
+                          onClick={() => pick(row.entity.id)}
+                        >
+                          <b>{row.title}</b>
+                          <span>
+                            {row.entity.label}
+                            {row.confidence ? ` · ${row.confidence}` : ""}
+                          </span>
+                          <small>{row.reason}</small>
+                        </button>
                       ))}
                     </div>
-                    {module !== 5 && (
-                      <details>
-                        <summary>
-                          {trace.plans.length} documented contingency plans
-                        </summary>
-                        {trace.plans.map((item) => (
-                          <p key={item.id}>
-                            {item.label} · {item.details.procedure}
-                          </p>
-                        ))}
-                      </details>
-                    )}
-                  </div>
-                )}
-                {agent && module === 6 && (
-                  <div className="analysis">
-                    <strong>{agent.overlaps.length} overlapping agents</strong>
-                    <p>
-                      {agent.overlaps.map((item) => item.label).join(", ") ||
-                        "No recorded overlaps."}
+                  )}
+                  {busy && (
+                    <p className="message" role="status">
+                      Analyzing relationships…
                     </p>
-                    <strong>
-                      {agent.excess.length} access paths to review
-                    </strong>
-                    <p>
-                      {agent.excess.map((item) => item.label).join(", ") ||
-                        "No grants outside the baseline."}
+                  )}
+                  {error && (
+                    <p className="message" role="alert">
+                      {error}
                     </p>
-                    <small>{agent.assumption}</small>
-                  </div>
-                )}
-                {knowledge && module === 7 && (
-                  <div className="analysis">
-                    <strong>
-                      {
-                        knowledge.filter((item) => !item.alternatives.length)
-                          .length
-                      }{" "}
-                      assets lose all owners
-                    </strong>
-                    {knowledge.length ? (
-                      knowledge.map((row) => (
-                        <div key={row.entity.id}>
-                          <b>{row.entity.label}</b>
-                          <p>
-                            {row.alternatives
-                              .map((item) => item.label)
-                              .join(", ") || row.mitigation}
-                          </p>
-                        </div>
-                      ))
-                    ) : (
-                      <p>No documented assets are assigned to this role.</p>
-                    )}
-                  </div>
-                )}
-                {findings && [4, 8].includes(module) && (
-                  <div className="analysis">
-                    <strong>{findings.length} findings</strong>
-                    {findings.slice(0, 40).map((row) => (
+                  )}
+                  {inspectionError && (
+                    <p className="message" role="alert">
+                      {inspectionError}
+                    </p>
+                  )}
+                  {inspection && (
+                    <div className="entity-card">
+                      <div className="eyebrow">{inspection.entity.kind}</div>
+                      <h2>{inspection.entity.label}</h2>
+                      <div className="direction">
+                        <button
+                          className={tab === "overview" ? "chosen" : ""}
+                          onClick={() => setTab("overview")}
+                        >
+                          Overview
+                        </button>
+                        <button
+                          className={tab === "edges" ? "chosen" : ""}
+                          onClick={() => setTab("edges")}
+                        >
+                          Relationships
+                        </button>
+                      </div>
+                      {tab === "overview" ? (
+                        <>
+                          <p>{inspection.total} recorded relationships</p>
+                          {inspection.entity.kind === "department" && (
+                            <button
+                              className="secondary"
+                              onClick={() => {
+                                setClustered(false);
+                                setDepartment(inspection.entity.id);
+                                setOffset(0);
+                              }}
+                            >
+                              Explore department
+                            </button>
+                          )}
+                          {Object.entries(inspection.entity.details).map(
+                            ([label, value]) => (
+                              <p key={label}>
+                                <b>{label}</b> · {value}
+                              </p>
+                            ),
+                          )}
+                        </>
+                      ) : (
+                        inspection.edges.map((edge) => {
+                          const other =
+                            edge.source === selected
+                              ? edge.target
+                              : edge.source;
+                          return (
+                            <button
+                              className="edge"
+                              key={edge.source + edge.target}
+                              onClick={() => pick(other)}
+                            >
+                              <span>{pretty(edge.kind)}</span>
+                              {labels.get(other) ?? other}
+                            </button>
+                          );
+                        })
+                      )}
+                    </div>
+                  )}
+                  <div className="entity-list">
+                    <div className="list-label">
+                      {clustered
+                        ? "Browse departments"
+                        : visual === graph
+                          ? "Browse entities"
+                          : "Evidence entities"}
+                      <span>
+                        {visual === graph
+                          ? total.toLocaleString("en-US")
+                          : showing}
+                      </span>
+                    </div>
+                    {visual.nodes.map((item) => (
                       <button
-                        className="finding"
-                        key={row.entity.id + row.title}
-                        onClick={() => pick(row.entity.id)}
+                        className={selected === item.id ? "picked" : ""}
+                        key={item.id}
+                        onClick={() => pick(item.id)}
                       >
-                        <b>{row.title}</b>
+                        <i
+                          style={{ background: colors[item.kind] ?? "#a7a6bd" }}
+                        />
                         <span>
-                          {row.entity.label}
-                          {row.confidence ? ` · ${row.confidence}` : ""}
+                          {item.label}
+                          <small>{item.kind}</small>
                         </span>
-                        <small>{row.reason}</small>
+                        <ChevronRight size={14} />
                       </button>
                     ))}
-                  </div>
-                )}
-                {busy && (
-                  <p className="message" role="status">
-                    Analyzing relationships…
-                  </p>
-                )}
-                {error && (
-                  <p className="message" role="alert">
-                    {error}
-                  </p>
-                )}
-                {inspectionError && (
-                  <p className="message" role="alert">
-                    {inspectionError}
-                  </p>
-                )}
-                {inspection && (
-                  <div className="entity-card">
-                    <div className="eyebrow">{inspection.entity.kind}</div>
-                    <h2>{inspection.entity.label}</h2>
-                    <div className="direction">
-                      <button
-                        className={tab === "overview" ? "chosen" : ""}
-                        onClick={() => setTab("overview")}
-                      >
-                        Overview
-                      </button>
-                      <button
-                        className={tab === "edges" ? "chosen" : ""}
-                        onClick={() => setTab("edges")}
-                      >
-                        Relationships
-                      </button>
-                    </div>
-                    {tab === "overview" ? (
-                      <>
-                        <p>{inspection.total} recorded relationships</p>
-                        {inspection.entity.kind === "department" && (
-                          <button
-                            className="secondary"
-                            onClick={() => {
-                              setClustered(false);
-                              setDepartment(inspection.entity.id);
-                              setOffset(0);
-                            }}
-                          >
-                            Explore department
-                          </button>
-                        )}
-                        {Object.entries(inspection.entity.details).map(
-                          ([label, value]) => (
-                            <p key={label}>
-                              <b>{label}</b> · {value}
-                            </p>
-                          ),
-                        )}
-                      </>
-                    ) : (
-                      inspection.edges.map((edge) => {
-                        const other =
-                          edge.source === selected ? edge.target : edge.source;
-                        return (
-                          <button
-                            className="edge"
-                            key={edge.source + edge.target}
-                            onClick={() => pick(other)}
-                          >
-                            <span>{pretty(edge.kind)}</span>
-                            {labels.get(other) ?? other}
-                          </button>
-                        );
-                      })
+                    {visual !== graph && graph && (
+                      <details className="browse">
+                        <summary>Choose a different entity</summary>
+                        {graph.nodes
+                          .filter(
+                            (item) =>
+                              !kinds[module] || item.kind === kinds[module],
+                          )
+                          .map((item) => (
+                            <button key={item.id} onClick={() => pick(item.id)}>
+                              {item.label}
+                            </button>
+                          ))}
+                      </details>
+                    )}
+                    {!clustered && total > 180 && (
+                      <div className="pagination">
+                        <button
+                          disabled={offset === 0}
+                          onClick={() => setOffset(previousPage)}
+                        >
+                          Previous
+                        </button>
+                        <span>
+                          {offset + 1}–{Math.min(offset + 180, total)}
+                        </span>
+                        <button
+                          disabled={offset + 180 >= total}
+                          onClick={() => setOffset(offset + 180)}
+                        >
+                          Next
+                        </button>
+                      </div>
                     )}
                   </div>
-                )}
-                <div className="entity-list">
-                  <div className="list-label">
-                    {clustered
-                      ? "Browse departments"
-                      : visual === graph
-                        ? "Browse entities"
-                        : "Evidence entities"}
-                    <span>
-                      {visual === graph
-                        ? total.toLocaleString("en-US")
-                        : showing}
-                    </span>
-                  </div>
-                  {visual.nodes.map((item) => (
-                    <button
-                      className={selected === item.id ? "picked" : ""}
-                      key={item.id}
-                      onClick={() => pick(item.id)}
-                    >
-                      <i
-                        style={{ background: colors[item.kind] ?? "#a7a6bd" }}
-                      />
-                      <span>
-                        {item.label}
-                        <small>{item.kind}</small>
-                      </span>
-                      <ChevronRight size={14} />
-                    </button>
-                  ))}
-                  {visual !== graph && graph && (
-                    <details className="browse">
-                      <summary>Choose a different entity</summary>
-                      {graph.nodes
-                        .filter(
-                          (item) =>
-                            !kinds[module] || item.kind === kinds[module],
-                        )
-                        .map((item) => (
-                          <button key={item.id} onClick={() => pick(item.id)}>
-                            {item.label}
-                          </button>
-                        ))}
-                    </details>
-                  )}
-                  {!clustered && total > 180 && (
-                    <div className="pagination">
-                      <button
-                        disabled={offset === 0}
-                        onClick={() => setOffset(previousPage)}
-                      >
-                        Previous
-                      </button>
-                      <span>
-                        {offset + 1}–{Math.min(offset + 180, total)}
-                      </span>
-                      <button
-                        disabled={offset + 180 >= total}
-                        onClick={() => setOffset(offset + 180)}
-                      >
-                        Next
-                      </button>
-                    </div>
-                  )}
                 </div>
-              </div>
-            </aside>
-          </div>
+              </aside>
+            </div>
+          )}
         </section>
       </main>
     </div>
+  );
+}
+
+function ImpactReport({
+  trace,
+  target,
+  graph,
+  busy,
+  error,
+  showMap,
+  toggleMap,
+  chooseTarget,
+}: {
+  trace?: Trace;
+  target: string;
+  graph?: Graph;
+  busy: boolean;
+  error: string;
+  showMap: boolean;
+  toggleMap: () => void;
+  chooseTarget: (id: string) => void;
+}) {
+  const source =
+    trace?.nodes.find((item) => item.id === target) ??
+    graph?.nodes.find((item) => item.id === target);
+  const applications =
+    graph?.nodes.filter((item) => item.kind === "application") ?? [];
+  const affected =
+    trace?.nodes.filter(
+      (item) => item.id !== target && trace.levels?.[item.id] !== undefined,
+    ) ?? [];
+  affected.sort(
+    (left, right) =>
+      (trace?.levels?.[left.id] ?? 0) - (trace?.levels?.[right.id] ?? 0) ||
+      left.label.localeCompare(right.label),
+  );
+  const names = new Map(trace?.nodes.map((item) => [item.id, item.label]));
+
+  return (
+    <section className="impact-report" aria-label="Outage simulation">
+      <div className="scenario-controls">
+        <label>
+          Simulate an outage of
+          <select
+            value={target}
+            onChange={(event) => chooseTarget(event.target.value)}
+          >
+            {!applications.some((item) => item.id === target) && (
+              <option value={target}>
+                {source?.label ??
+                  (target === defaults[1] ? "Order Management" : target)}
+              </option>
+            )}
+            {applications.map((item) => (
+              <option key={item.id} value={item.id}>
+                {item.label}
+              </option>
+            ))}
+          </select>
+        </label>
+        <button
+          className="secondary"
+          type="button"
+          aria-expanded={showMap}
+          onClick={toggleMap}
+        >
+          <Network size={16} />{" "}
+          {showMap ? "Hide dependency map" : "Show dependency map"}
+        </button>
+      </div>
+      {showMap ? null : error ? (
+        <p role="alert">{error}</p>
+      ) : !trace || busy ? (
+        <p role="status">Checking dependencies…</p>
+      ) : (
+        <>
+          <div className="impact-totals">
+            <div>
+              <strong>{affected.length}</strong>
+              <span>affected entities</span>
+            </div>
+            <div>
+              <strong>{trace.counts.process ?? 0}</strong>
+              <span>business processes</span>
+            </div>
+            <div>
+              <strong>{trace.departments.length}</strong>
+              <span>departments</span>
+            </div>
+          </div>
+          <div className="impact-columns">
+            <section className="impact-results">
+              <h2>What could be affected</h2>
+              {affected.length ? (
+                <table>
+                  <thead>
+                    <tr>
+                      <th scope="col">Name</th>
+                      <th scope="col">Dependency path</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {affected.map((item) => {
+                      const path = [item.label];
+                      let current = item.id;
+                      let level = trace.levels?.[current] ?? 0;
+                      while (level > 0) {
+                        const edge = trace.edges.find(
+                          (edge) =>
+                            edge.source === current &&
+                            [
+                              "depends_on",
+                              "can_read",
+                              "uses_model",
+                              "uses_tool",
+                            ].includes(edge.kind) &&
+                            trace.levels?.[edge.target] === level - 1,
+                        );
+                        if (!edge) break;
+                        current = edge.target;
+                        path.unshift(names.get(current) ?? current);
+                        level--;
+                      }
+                      return (
+                        <tr key={item.id}>
+                          <th scope="row">
+                            {item.label}
+                            <small>{item.kind}</small>
+                          </th>
+                          <td>{path.join(" → ")}</td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              ) : (
+                <p>No downstream dependencies were recorded.</p>
+              )}
+            </section>
+            <aside className="impact-recovery">
+              <h2>Recovery plans</h2>
+              <p>
+                {trace.plans.length
+                  ? "Documented options for responding to this outage."
+                  : "No plans are linked to the affected items."}
+              </p>
+              {trace.plans.map((plan) => (
+                <details key={plan.id}>
+                  <summary>{plan.label}</summary>
+                  <p>{plan.details.procedure}</p>
+                </details>
+              ))}
+              <p className="impact-note">
+                Simulation uses the recorded dependencies in the fictional
+                Nexora Global dataset.
+              </p>
+            </aside>
+          </div>
+        </>
+      )}
+    </section>
   );
 }

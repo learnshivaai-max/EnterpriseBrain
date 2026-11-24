@@ -4,18 +4,15 @@ test("explores the graph, filters entities and inspects relationships", async ({
   page,
 }) => {
   await page.goto("/");
+  await page
+    .getByRole("navigation")
+    .getByRole("button", { name: "Enterprise Universe" })
+    .click();
   await expect(
     page.getByRole("heading", { name: "Enterprise Universe" }),
   ).toBeVisible();
   await expect(page.getByText("10,000", { exact: true })).toBeVisible();
   await expect(page.locator(".universe canvas")).toBeVisible();
-  if (process.env.ENTERPRISEBRAIN_SCREENSHOT) {
-    await page.setViewportSize({ width: 1440, height: 900 });
-    await page.screenshot({
-      path: process.env.ENTERPRISEBRAIN_SCREENSHOT,
-      animations: "disabled",
-    });
-  }
   await page.getByLabel("Search entities").fill("Order Management");
   await page
     .getByRole("button", { name: "Order Management application" })
@@ -41,7 +38,7 @@ test("loads each analytical workspace and answers with evidence", async ({
   await page.goto("/");
   const navigation = page.getByRole("navigation");
   const ready = [
-    ["Blast Radius", /\d+ affected entities/],
+    ["Blast Radius", "What could be affected"],
     ["Time Machine", "16 added · 0 removed"],
     ["Risk Intelligence", /^\d+ findings$/],
     ["KPI DNA", /\d+ connected entities/],
@@ -71,6 +68,10 @@ test("supports compact navigation, department aggregation and full-screen graph 
 }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/");
+  await page
+    .getByRole("navigation")
+    .getByRole("button", { name: "Enterprise Universe" })
+    .click();
   await expect(page.getByText("10,000", { exact: true })).toBeVisible();
   await expect(
     page.getByRole("button", { name: "Enterprise Universe", exact: true }),
@@ -94,4 +95,37 @@ test("supports compact navigation, department aggregation and full-screen graph 
   expect(
     await page.evaluate(() => document.documentElement.scrollWidth),
   ).toBeLessThanOrEqual(390);
+});
+
+test("opens with named outage evidence and lets users switch scenarios", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await expect(
+    page.getByRole("heading", { name: "What breaks if this goes down?" }),
+  ).toBeVisible();
+  const source = page.getByRole("combobox", { name: "Simulate an outage of" });
+  await expect(source).toHaveValue("application-1");
+  await expect(
+    page.getByRole("row", { name: /Order Fulfillment.*Order Management/ }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Recovery plans" }),
+  ).toBeVisible();
+  await expect(page.locator(".universe canvas")).toHaveCount(0);
+  if (process.env.ENTERPRISEBRAIN_SCREENSHOT) {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.screenshot({
+      path: process.env.ENTERPRISEBRAIN_SCREENSHOT,
+      animations: "disabled",
+    });
+  }
+  await page.getByRole("button", { name: "Show dependency map" }).click();
+  await expect(page.locator(".universe canvas")).toBeVisible();
+  await page.getByRole("button", { name: "Hide dependency map" }).click();
+  await source.selectOption("application-2");
+  await expect(page.getByRole("table")).toContainText("Identity Directory");
+  await expect(page.getByRole("table")).not.toContainText(
+    "Order Management → Order Fulfillment",
+  );
 });
