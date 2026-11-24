@@ -1,8 +1,18 @@
 # Threadatlas
 
-See how your enterprise fits together.
+See what could break before you change a data table.
 
-Threadatlas maps how teams, software, and data depend on each other. The local demo uses a fictional multinational, Nexora Global. Open Blast Radius to see which processes would be affected if a system failed, or KPI DNA to see where a metric comes from. The seeded current snapshot contains 10,000 employees, 30 departments, 50 applications, 200 business processes, 100 policies and 25 AI agents, alongside executive metrics, data assets, roles and recovery plans.
+Threadatlas turns recorded dependencies into a change checklist: which jobs to update, which reports to test, and which teams to notify.
+
+![Threadatlas showing the jobs, reports, and owners affected by a column rename](docs/table-change-planner.png)
+
+## Try the demo
+
+1. Open Threadatlas to the **Table Change Planner**.
+2. Select **Drop reorder_point** on the fictional inventory table.
+3. Update the **Build reorder candidates** job, test the **Reorder Watchlist**, and notify the two teams shown. Select a different change to see how the checklist changes.
+
+The planner uses built-in fictional data. The demo covers application outages and KPI lineage through the **Blast Radius** and **KPI DNA** screens. Run the app locally to try it.
 
 ## Run locally
 
